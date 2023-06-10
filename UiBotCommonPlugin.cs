@@ -16,6 +16,11 @@ using Newtonsoft.Json;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System.Net;
+using NPOI.POIFS.FileSystem;
+using NPOI.Util;
+using NPOI.HSSF.Record;
+using NPOI.HSSF.Model;
+using System.Reflection;
 
 //建议把下面的namespace名字改为您的插件名字
 namespace UiBotCommonPlugin
@@ -28,6 +33,9 @@ namespace UiBotCommonPlugin
 
   void PdfExtractPages(string sourcePDFpath, string outputPDFpath, int startpage, int endpage);
   void PdfToXls(string source, string xlspath);
+  void DocToDocx(string source, string xlspath);
+  void PptToPptx(string source, string xlspath);
+  void XlsToXlsx(string source, string xlspath);
 
   string TextFromPage(string _filePath, int startPage, int endPage);
   void GrayScaleImage(string filepath);
@@ -39,6 +47,8 @@ namespace UiBotCommonPlugin
   string testType(string target);
   string ConvertToTraditional(string target);
 
+  string ExcelReset(string target);
+
   string ExcelGetSheetsName(string target);
   string ExcelReadRow(string target, string SheetName, int RowNumber);
   int ExcelGetRowsCount(string target, string SheetName);
@@ -47,6 +57,9 @@ namespace UiBotCommonPlugin
   string ExcelReadAllData(string target);
 
   string ExcelReadRange(string target, string SheetName, string range);
+  string OCR(string target, string domain, string key);
+
+  
  }
 
  public class Plugin_Implement : Plugin_Interface
@@ -355,6 +368,30 @@ namespace UiBotCommonPlugin
    }
   }
 
+
+  public string ExcelReset(string target)
+  {
+   using (FileStream file = new FileStream(target, FileMode.Open, FileAccess.Read))
+   {
+
+    if (target.EndsWith(".xls", StringComparison.InvariantCultureIgnoreCase))
+    {
+     HSSFWorkbook workbook = new HSSFWorkbook(file);
+
+     workbook.Close();
+    }else
+    {
+
+     XSSFWorkbook workbook = new XSSFWorkbook(file);
+     workbook.Close();
+    }
+     //now the workbook is created properly
+     return "OK";
+   }
+
+
+  }
+
   public string ExcelReadAllData(string target)
   {
    try
@@ -462,7 +499,44 @@ namespace UiBotCommonPlugin
    stream.Close();
   }
 
-   
+
+  public string OCR(string target, string domain, string apikey) {
+
+   try
+   {
+    if(File.Exists(target))
+    {
+     try
+     {
+      using (System.Drawing.Image img = System.Drawing.Image.FromFile(target))
+      {
+       using (MemoryStream stream = new MemoryStream())
+       {
+        img.Save(stream, ImageFormat.Jpeg);
+        using(WebClient client = new WebClient())
+        {
+         string base64Data = UrlEncode( "data:image/jpeg;base64," + Convert.ToBase64String(stream.ToArray()));
+         client.Headers["key"] = apikey;
+         client.Headers["Content-Type"] = "application/x-www-form-urlencoded";
+         client.Encoding  = Encoding.UTF8;
+         return client.UploadString("https://iot.jtmes.net/" + domain + "/api/ocr" , "POST", "base64Data=" + base64Data);
+        }
+       }
+      }
+     }
+     catch (Exception e)
+     {
+
+      return JsonConvert.SerializeObject(new { error = "Bad Image", msg = e.Message });
+     }
+    }
+    return JsonConvert.SerializeObject(new { error = "File Not Found"});
+   }
+   catch (Exception ex)
+   {
+    return JsonConvert.SerializeObject(new { error = ex.Message });
+   }
+  }
 
   public string UrlEncode(string data)
   {
@@ -534,6 +608,29 @@ namespace UiBotCommonPlugin
    Spire.Pdf.PdfDocument doc = new Spire.Pdf.PdfDocument(filename);
    doc.SaveToFile(xlspath, Spire.Pdf.FileFormat.XLSX);
   }
+
+
+  public void DocToDocx(string filename, string xlspath)
+  {
+   Aspose.Words.Document wordDocument = new Aspose.Words.Document(filename);
+   wordDocument.Save(xlspath, Aspose.Words.SaveFormat.Docx);
+  }
+
+  public void PptToPptx(string filename, string xlspath)
+  {
+   // Instantiate a Presentation object that represents a PPTX file
+   Aspose.Slides.Presentation pres = new Aspose.Slides.Presentation(filename);
+
+   // Saving the PPTX presentation to PPTX format
+   pres.Save(xlspath, Aspose.Slides.Export.SaveFormat.Pptx);
+  }
+
+  public void XlsToXlsx(string filename, string xlspath)
+  {
+   var workbook = new Aspose.Cells.Workbook(filename);
+   workbook.Save(xlspath);
+  }
+
   public string TextFromPage(string _filePath, int startPage, int endPage)
   {
    var pdfReader = new PdfReader(_filePath);
@@ -738,6 +835,7 @@ namespace UiBotCommonPlugin
    public void BeginTextBlock() { }
    public void EndTextBlock() { }
    public void RenderImage(ImageRenderInfo renderInfo) { }
+
   }
  }
 

@@ -14,33 +14,41 @@
         "outputPath": "D:\\GitHub\\jteprpa\\UiBotCommonPlugin\\obj\\",
         "projectStyle": "PackageReference",
         "skipContentFileWrite": true,
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
           "C:\\Users\\Sean\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
-          "net452"
+          "net48"
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net452": {
+          "net48": {
             "projectReferences": {}
           }
         }
       },
       "frameworks": {
-        "net452": {
+        "net48": {
           "dependencies": {
+            "Aspose.Cells": {
+              "target": "Package",
+              "version": "[23.6.0, )"
+            },
+            "Aspose.Slides.NET": {
+              "target": "Package",
+              "version": "[23.5.0, )"
+            },
+            "Aspose.Words": {
+              "target": "Package",
+              "version": "[23.6.0, )"
+            },
             "NPOI": {
               "target": "Package",
-              "version": "[2.5.5, )"
+              "version": "[2.6.0, )"
             },
             "Newtonsoft.Json": {
               "target": "Package",
