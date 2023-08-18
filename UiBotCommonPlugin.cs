@@ -39,9 +39,13 @@ namespace UiBotCommonPlugin
 
   void PdfExtractPages(string sourcePDFpath, string outputPDFpath, int startpage, int endpage);
   void PdfToXls(string source, string xlspath);
+  void PdfToTxt(string source, string txtpath);
   void DocToDocx(string source, string xlspath);
+  void DocToTxt(string source, string txtpath); 
   void PptToPptx(string source, string xlspath);
+  void PptToTxt(string source, string txtpath); 
   void XlsToXlsx(string source, string xlspath);
+  void XlsToTxt(string source, string txtpath);
 
   string TextFromPage(string _filePath, int startPage, int endPage);
   void GrayScaleImage(string filepath);
@@ -404,7 +408,6 @@ namespace UiBotCommonPlugin
    {
     using (FileStream file = new FileStream(target, FileMode.Open, FileAccess.Read))
     {
-
      if (target.EndsWith(".xls", StringComparison.InvariantCultureIgnoreCase))
      {
       HSSFWorkbook workbook = new HSSFWorkbook(file);
@@ -416,17 +419,35 @@ namespace UiBotCommonPlugin
        NPOI.SS.UserModel.ISheet sheet = workbook.GetSheetAt(s);
        string SheetName = workbook.GetSheetAt(s).SheetName;
        List<List<object>> t = new List<List<object>>();
+       List<List<object>> er = new List<List<object>>();
        for (int i = 0; i < sheet.LastRowNum + 1; i++)
        {
-        NPOI.SS.UserModel.IRow Row = sheet.GetRow(i);
         List<object> r = new List<object>();
-        for (int j = 0; j < Row.LastCellNum + 1; j++)
+        List<object> ei = new List<object>();
+        try
         {
-         r.Add(getCellValue(Row.GetCell(j)));
+         NPOI.SS.UserModel.IRow Row = sheet.GetRow(i);
+         for (int j = 0; j < Row.LastCellNum + 1; j++)
+         {
+          try
+          {
+           r.Add(getCellValue(Row.GetCell(j)));
+          }
+          catch (Exception e1)
+          {
+           ei.Add("GetCell" + i + "," + j + "error:" + e1.Message);
+          }
+         }
+        }
+        catch (Exception e)
+        {
+         ei.Add("row" + i + "error:" + e.Message);
         }
         t.Add(r);
+        er.Add(ei);
        }
        d[SheetName] = t;
+       d["error-" + SheetName] = er;
       }
       return JsonConvert.SerializeObject(d);
      }
@@ -442,17 +463,35 @@ namespace UiBotCommonPlugin
        NPOI.SS.UserModel.ISheet sheet = workbook.GetSheetAt(s);
        string SheetName = workbook.GetSheetAt(s).SheetName;
        List<List<object>> t = new List<List<object>>();
+       List<List<object>> er = new List<List<object>>();
        for (int i = 0; i < sheet.LastRowNum + 1; i++)
        {
-        NPOI.SS.UserModel.IRow Row = sheet.GetRow(i);
         List<object> r = new List<object>();
-        for (int j = 0; j < Row.LastCellNum + 1; j++)
+        List<object> ei = new List<object>();
+        try
         {
-         r.Add(getCellValue(Row.GetCell(j)));
+         NPOI.SS.UserModel.IRow Row = sheet.GetRow(i);
+         for (int j = 0; j < Row.LastCellNum + 1; j++)
+         {
+          try
+          {
+           r.Add(getCellValue(Row.GetCell(j)));
+          }
+          catch (Exception e1)
+          {
+           ei.Add("GetCell" + i + "," + j + "error:" + e1.Message);
+          }
+         }
+         t.Add(r);
+         er.Add(ei);
         }
-        t.Add(r);
+        catch (Exception e)
+        {
+         ei.Add("row" + i + "error:" + e.Message);
+        }
        }
        d[SheetName] = t;
+       d["error-" + SheetName] = er;
       }
       return JsonConvert.SerializeObject(d);
      }
@@ -614,6 +653,22 @@ namespace UiBotCommonPlugin
    Spire.Pdf.PdfDocument doc = new Spire.Pdf.PdfDocument(filename);
    doc.SaveToFile(xlspath, Spire.Pdf.FileFormat.XLSX);
   }
+  public void PdfToTxt(string filename, string txtpath)
+  {
+
+   using (PdfReader pdfReader = new PdfReader(filename))
+   {
+    using (StreamWriter writer = new StreamWriter(txtpath))
+    {
+     for (int page = 1; page <= pdfReader.NumberOfPages; page++)
+     {
+      ITextExtractionStrategy strategy = new SimpleTextExtractionStrategy();
+      string text = PdfTextExtractor.GetTextFromPage(pdfReader, page, strategy);
+      writer.WriteLine(text);
+     }
+    }
+   }
+  }
 
 
   public void DocToDocx(string filename, string xlspath)
@@ -622,6 +677,16 @@ namespace UiBotCommonPlugin
    wordDocument.Save(xlspath, Aspose.Words.SaveFormat.Docx);
   }
 
+
+  public void DocToTxt(string filename, string txtpath)
+  {
+   Aspose.Words.Document wordDocument = new Aspose.Words.Document(filename);
+   // Extract text from the entire document
+   string textContent = wordDocument.GetText();
+
+   // Save the extracted text to a text file
+   System.IO.File.WriteAllText(txtpath, textContent);
+  }
   public void PptToPptx(string filename, string xlspath)
   {
    // Instantiate a Presentation object that represents a PPTX file
@@ -631,10 +696,45 @@ namespace UiBotCommonPlugin
    pres.Save(xlspath, Aspose.Slides.Export.SaveFormat.Pptx);
   }
 
+  public void PptToTxt(string filename, string txtpath)
+  {
+   string textContent = "";
+   // Instantiate a Presentation object that represents a PPTX file
+   Aspose.Slides.Presentation pres = new Aspose.Slides.Presentation(filename);
+
+   foreach (Aspose.Slides.ISlide slide in pres.Slides)
+   {
+    foreach (Aspose.Slides.IShape shape in slide.Shapes)
+    {
+     if (shape is Aspose.Slides.ITextFrame textFrame)
+     {
+      foreach (Aspose.Slides.IParagraph paragraph in textFrame.Paragraphs)
+      {
+       foreach (Aspose.Slides.IPortion portion in paragraph.Portions)
+       {
+        textContent += portion.Text + "\r\n";
+       }
+      }
+     }
+    }
+   }
+
+   // Save the extracted text to a text file
+   System.IO.File.WriteAllText(txtpath, textContent);
+  }
+
   public void XlsToXlsx(string filename, string xlspath)
   {
    var workbook = new Aspose.Cells.Workbook(filename);
    workbook.Save(xlspath);
+  }
+
+  public void XlsToTxt(string filename, string txtpath)
+  {
+   var workbook = new Aspose.Cells.Workbook(filename);
+   Aspose.Cells.TxtSaveOptions saveOptions = new Aspose.Cells.TxtSaveOptions();
+   saveOptions.Separator = '\t'; // You can change the separator as needed
+   workbook.Save(txtpath, saveOptions);
   }
 
   public string TextFromPage(string _filePath, int startPage, int endPage)
