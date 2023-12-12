@@ -78,28 +78,31 @@ arrayRet = JSON.Parse(UiBotCommonPlugin.ExcelReadRow("D:\\2203252139.xls","Sheet
 17 ExcelReadAllData 讀取所有資料
 arrayRet = JSON.Parse(UiBotCommonPlugin.ExcelReadAllData("D:\\2203252139.xls"))
 
-18 OCR 參數是 來源圖片，domain (來自於 https://iot.jtmes.net/domain 斜線後面的文字)，ApiKey 由  https://iot.jtmes.net/ 註冊登入產生
+18 Google OCR 參數是 來源圖片  ApiKey 由  google 產生
+arrayRet = JSON.Parse(UiBotCommonPlugin.GoogleOCR("D:\\2203252139.jpg", ApiKey))
+
+19 OCR 參數是 來源圖片，domain (來自於 https://iot.jtmes.net/domain 斜線後面的文字)，ApiKey 由  https://iot.jtmes.net/ 註冊登入產生
 arrayRet = JSON.Parse(UiBotCommonPlugin.OCR("D:\\2203252139.jpg", "ebc", ApiKey))
 
-19 doc to docx
+20 doc to docx
 UiBotCommonPlugin.DocToDocx(string source, string xlspath)
 
-20 ppt to pptx
+21 ppt to pptx
 UiBotCommonPlugin.PptToPptx(string source, string xlspath)
 
-21 xls to xlsx
+22 xls to xlsx
 UiBotCommonPlugin.XlsToXlsx(string source, string xlspath)
 
-22 doc to txt
+23 doc to txt
 UiBotCommonPlugin.DocToTxt(string source, string xlspath)
 
-23 ppt to txt
+24 ppt to txt
 UiBotCommonPlugin.PptToTxt(string source, string xlspath)
 
-24 xls to txt
+25 xls to txt
 UiBotCommonPlugin.XlsToTxt(string source, string xlspath)
 
-25 pdf to txt
+26 pdf to txt
 UiBotCommonPlugin.PdfToTxt(string source, string xlspath)
 
-26 chatGPT UiBotCommonPlugin.chatGPT(string apiKey, string ask)
+27 chatGPT UiBotCommonPlugin.chatGPT(string apiKey, string ask)
